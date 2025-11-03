@@ -1,14 +1,26 @@
-# Use an official OpenJDK image
-FROM openjdk:17-jdk-slim
-
-# Set working directory
+# ---------- Stage 1: Build the JAR ----------
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
 
-# Copy the jar file built by Maven
-COPY target/examverse-backend-0.0.1-SNAPSHOT.jar app.jar
+# Copy only pom.xml first to leverage Docker caching
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
 
-# Expose port 8080 (Render uses this)
+# Copy all source files
+COPY src ./src
+
+# Package the app
+RUN mvn clean package -DskipTests
+
+# ---------- Stage 2: Run the JAR ----------
+FROM eclipse-temurin:17-jdk-alpine
+WORKDIR /app
+
+# Copy the built JAR from the previous stage
+COPY --from=build /app/target/*.jar app.jar
+
+# Expose port 8080 (Render requires this)
 EXPOSE 8080
 
-# Start the Spring Boot app
+# Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
