@@ -1,4 +1,4 @@
-package com.examverse.examverse_backend;
+package com.examverse;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
